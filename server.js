@@ -20,7 +20,7 @@ app.get('/sts_kids_hd', async (req, res) => {
         
         // Ищем живую строчку от api.peers.tv с sts_kids
         const match = response.data.match(/https?:\/\/api\.peers\.tv\/[^\s]+sts_kids[^\s]+\.m3u8[^\s]*/i);
-        if (!match) throw new Error('Поток не найден у Димоновича');
+        if (!match) throw new Error('Error');
         
         const streamUrl = match.trim();
         
