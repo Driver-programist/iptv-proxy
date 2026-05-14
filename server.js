@@ -2,9 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-const PORT = process.env.PORT || 3000;
-
-// Разрешаем CORS, чтобы плееры не выдавали ошибку сети
+// Разрешаем CORS заголовки для IPTV-плееров
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -12,33 +10,34 @@ app.use((req, res, next) => {
 });
 
 app.get('/sts_kids_hd', async (req, res) => {
-    console.log(`[${new Date().toISOString()}] 📺 Запрос СТС Kids от IPTV-плеера`);
-    
     try {
-        // Точный и полный адрес источника Димоновича
+        // Точный адрес источника, который ты скинул
         const playlistUrl = 'https://github.com/Dimonovich/TV/raw/refs/heads/Dimonovich/FREE/TV';
         
         const response = await axios.get(playlistUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
         });
         
-        // Вырезаем актуальную ссылку от api.peers.tv
+        // Ищем живую строчку от api.peers.tv с sts_kids
         const match = response.data.match(/https?:\/\/api\.peers\.tv\/[^\s]+sts_kids[^\s]+\.m3u8[^\s]*/i);
-        if (!match) throw new Error('Поток СТС Kids не найден в исходном файле');
+        if (!match) throw new Error('Поток не найден у Димоновича');
         
-        const streamUrl = match[0].trim();
-        console.log(`✅ Ссылка успешно найдена! Перенаправляем плеер.`);
+        const streamUrl = match.trim();
         
-        // Отправляем плеер напрямую к источнику. VLC это отлично понимает
-        res.redirect(302, streamUrl);
+        // Скачиваем видеопоток на лету и транслируем его прямо в VLC
+        const streamResponse = await axios({
+            method: 'get',
+            url: streamUrl,
+            responseType: 'stream',
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+        });
+        
+        res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+        streamResponse.data.pipe(res);
         
     } catch (error) {
-        console.error(`❌ Ошибка скрипта: ${error.message}`);
-        res.status(500).send(`Ошибка: ${error.message}`);
+        res.status(500).send(`Ошибка автообновления потока: ${error.message}`);
     }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Облачный IPTV навигатор работает на порту ${PORT}`);
-});
-
+module.exports = app;
