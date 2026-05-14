@@ -1,34 +1,7 @@
-name: Auto Update IPTV Stream
-
-on:
-  schedule:
-    - cron: '*/20 * * * *' # Робот будет сам запускаться каждые 20 минут вечно
-  workflow_dispatch: # Позволяет запускать вручную кнопкой для проверки
-
-jobs:
-  update:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm install axios
-
-      - name: Run parser
-        run: node server.js
-
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add sts_kids_hd
-          git commit -m "Обновление живого потока СТС Kids" || exit 0
+          git add index.html
+          git commit -m "Update" || exit 0
           git push
